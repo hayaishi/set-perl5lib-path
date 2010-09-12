@@ -1,0 +1,20 @@
+任意のディレクトリを環境変数 PERL5LIB に追加する為の elisp
+特別な理由により1つのリポジトリに複数の lib パスが存在するケースがあったため作成しました。
+以下のようなケースにも対応できます。
+
+repos/lib       -- プロジェクトで利用するモジュール群を格納する標準的なパス
+repos/script    -- batch などで利用するスクリプトを格納するパス
+repos/t/modules -- テストなどで利用するモジュール群を格納したパス
+
+これらのケースで script から lib および t/modules を lib パスに追加する場合は
+以下の様に set-perl5lib-path を呼び出してください。
+
+ex:
+(set-perl5lib-path buffer-file-name '("lib" "t/modules"))
+
+--
+この elisp は set-perl5lib という
+
+http://svn.coderepos.org/share/lang/elisp/set-perl5lib/set-perl5lib.el
+
+で紹介されている elisp に影響を受けています。
