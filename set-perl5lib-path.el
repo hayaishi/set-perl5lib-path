@@ -1,32 +1,29 @@
 ;-*- Emacs-Lisp -*-
 
-(defun exists-envp (env-symbol value)
-  (let* ((env (getenv env-symbol)))
-    (cond ((null env)
-           nil)
-          ((numberp (string-match value env))
-           t)
-          (t nil))))
-
 (defun set-perl5lib-path (path dir-list)
   (interactive)
-  (let* ((target-dir (car dir-list)))
+  (let* ((target-dir (car dir-list))
+         (env (if (null (getenv "PERL5LIB"))
+                  ""
+                (getenv "PERL5LIB")))
+         lib-path)
     (if (stringp target-dir)
-        (progn (set-perl5lib-path-2 path target-dir)
-               (set-perl5lib-path path (cdr dir-list)))
-      (message "set PERL5LIB = %s" (getenv "PERL5LIB")))))
-
-(defun set-perl5lib-path-2 (path dirname)
-  (let* ((env (getenv "PERL5LIB"))
-         (path-list (nreverse (cdr (nreverse (cdr (split-string path "/"))))))
-         (path-string (concat "/" (mapconcat 'identity path-list "/" )))
-         (path-work (concat path-string "/" dirname)))
+        (progn (setq lib-path (get-perl5lib-path path target-dir))
+               (setq env (set-perl5lib-path path (cdr dir-list)))))
     (if (and
-         (stringp path-string)
-         (not (exists-envp "PERL5LIB" path-work)))
+         (stringp lib-path)
+         (not (string-match lib-path env)))
+        (setenv "PERL5LIB" (concat lib-path ":" env))
+      env)))
+
+(defun get-perl5lib-path (path dirname)
+  (let* ((path-list (nreverse (cdr (nreverse (cdr (split-string path "/"))))))
+         (path-string (concat "/" (mapconcat 'identity path-list "/" )))
+         (lib-path (concat path-string "/" dirname)))
+    (if (not (null path-list))
         (progn
-          (cond ((file-directory-p path-work)
-                 (setenv "PERL5LIB" (concat env path-work ":" )))
-              (t (set-perl5lib-path-2 path-string dirname)))))))
+          (cond ((file-directory-p lib-path)
+                 lib-path)
+                (t (get-perl5lib-path path-string dirname)))))))
 
 (provide 'set-perl5lib-path)
